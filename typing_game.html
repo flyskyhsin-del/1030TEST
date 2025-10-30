@@ -125,10 +125,58 @@
             60% { background: #fff; color: #216a51; }
             100% { background: none; color: inherit; }
         }
+        /* 深色主題樣式 */
+        body.dark-theme {
+            background: linear-gradient(135deg, #232b35 0% 40%, #111a24 100%) !important;
+            color: #e2e2f2;
+        }
+        body.dark-theme .card {
+            background: #212232ee;
+            box-shadow: 0 5px 32px #425d6944;
+            border: 2px solid #3c4358;
+        }
+        body.dark-theme h1 {
+            color: #b9dbff;
+        }
+        body.dark-theme #status, body.dark-theme #word {
+            color: #e2bbf5;
+        }
+        body.dark-theme input[type="text"] {
+            background: #24283b;
+            color: #f0f0f1;
+            border: 1.5px solid #535b6c;
+        }
+        body.dark-theme input[type="text"]:focus {
+            background: #232b35;
+            border-color: #6699cc;
+        }
+        body.dark-theme button {
+            background: linear-gradient(95deg,#37577c 15%,#6da9d7 110%);
+            color: #fff;
+            box-shadow: 0 2px 4px #37577c82;
+        }
+        body.dark-theme button:disabled {
+            background: #3e516d;
+            color: #b0aec1;
+        }
+        body.dark-theme .result {
+            color: #74dbb6;
+        }
+        /* 深色雲朵星星透明更低 */
+        body.dark-theme::before, body.dark-theme::after {
+            opacity: 0.10;
+        }
     </style>
 </head>
 <body>
     <div class="card">
+        <div style="text-align:right">
+            <label for="themeSelect" style="font-size:1em;margin-right:5px">主題：</label>
+            <select id="themeSelect" style="font-size:1em;padding:2px 12px;border-radius:6px;">
+                <option value="bright">BRIGHT</option>
+                <option value="dark">DARK</option>
+            </select>
+        </div>
         <h1>英打小遊戲</h1>
         <div id="status"></div>
         <div id="word"></div>
@@ -159,6 +207,7 @@ const input = document.getElementById('input');
 const feedback = document.getElementById('feedback');
 const resultDiv = document.getElementById('result');
 const startBtn = document.getElementById('startBtn');
+const themeSelect = document.getElementById('themeSelect');
 
 function nextRound() {
     if (round >= ROUND) {
@@ -212,6 +261,19 @@ startBtn.onclick = function() {
     startBtn.disabled = true;
     nextRound();
 };
+
+themeSelect.addEventListener('change', function(){
+  if(this.value==='dark') {
+    document.body.classList.add('dark-theme');
+  } else {
+    document.body.classList.remove('dark-theme');
+  }
+});
+// 可自動根據系統暗色偏好預設套用
+if(window.matchMedia('(prefers-color-scheme: dark)').matches){
+  themeSelect.value = 'dark';
+  document.body.classList.add('dark-theme');
+}
 </script>
 </body>
 </html>
