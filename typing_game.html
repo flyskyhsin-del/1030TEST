@@ -9,20 +9,41 @@
     <style>
         body {
             font-family: 'Noto Sans', 'Roboto', 'Segoe UI', 'Arial', sans-serif;
-            background: linear-gradient(140deg, #fafcfc 0%, #e3e8f9 80%);
+            background: linear-gradient(135deg, #ffe5ec 0% 40%, #fbc2eb 100%);
             color: #222;
             min-height: 100vh;
             margin: 0;
+            position: relative;
+            overflow-x: hidden;
+        }
+        /* 可愛雲朵與星星 */
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            z-index: 0;
+            opacity: 0.18;
+            pointer-events: none;
+        }
+        body::before {
+            top: 3vw; left: 4vw;
+            width: 180px; height: 68px;
+            background: url('https://cdn.jsdelivr.net/gh/maecy1407/cute_BG_img/cloud-1.svg') no-repeat center/contain;
+        }
+        body::after {
+            bottom: 2vw; right: 6vw;
+            width: 110px; height: 110px;
+            background: url('https://cdn.jsdelivr.net/gh/maecy1407/cute_BG_img/star-1.svg') no-repeat center/contain;
         }
         .card {
             display: inline-block;
-            background: #fff;
+            background: #fffbe9ee;
             padding: 2.5em 3.5em;
-            box-shadow: 0 4px 22px #497de880;
+            box-shadow: 0 5px 32px #e595ba50;
             border-radius: 16px;
             margin-top: 60px;
             min-width: 340px;
             transition: box-shadow 0.2s;
+            border: 2px solid #fac8d3;
         }
         h1 {
             letter-spacing: 2px;
