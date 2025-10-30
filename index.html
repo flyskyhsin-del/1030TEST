@@ -9,17 +9,17 @@
     <style>
         body {
             font-family: 'Microsoft JhengHei', 'Noto Sans', 'Roboto', 'Segoe UI', 'Arial', sans-serif;
+            background: url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1500&q=80') no-repeat center center fixed;
+            background-size: cover;
             text-align: center;
+            min-height: 100vh;
+            margin: 0;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(135deg, #ffe5ec 0% 40%, #fbc2eb 100%);
-            color: #222;
-            min-height: 100vh;
-            margin: 0;
+            color: #f4f7f8;
             position: relative;
-            overflow-x: hidden;
         }
         /* 可愛雲朵與星星 */
         body::before, body::after {
@@ -41,15 +41,36 @@
         }
         .card {
             font-family: 'Microsoft JhengHei', 'Noto Sans', 'Roboto', 'Segoe UI', 'Arial', sans-serif;
-            display: inline-block;
-            background: #fffbe9ee;
+            background: rgba(34,36,60,0.87);
+            backdrop-filter: blur(2px);
             padding: 2.5em 3.5em;
-            box-shadow: 0 5px 32px #e595ba50;
-            border-radius: 16px;
-            margin-top: 60px;
+            box-shadow: 0 5px 32px #18253b99;
+            border-radius: 24px;
+            margin: 0 auto;
             min-width: 340px;
-            transition: box-shadow 0.2s;
-            border: 2px solid #fac8d3;
+            max-width: 95vw;
+            border: 2px solid #a1bfff55;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .setting-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom:20px;
+        }
+        .setting-group label {
+            font-size: 1em;
+            color: #d0e1ff;
+            margin-right: 5px;
+        }
+        .setting-group select, .setting-group input[type=number] {
+            font-size: 1em;
+            border-radius: 5px;
+            padding: 2px 12px;
+            margin-right: 18px;
         }
         h1 {
             letter-spacing: 2px;
@@ -178,13 +199,34 @@
 </head>
 <body>
     <div class="card">
-        <div style="text-align:right">
-            <label for="themeSelect" style="font-size:1em;margin-right:5px">主題：</label>
-            <select id="themeSelect" style="font-size:1em;padding:2px 12px;border-radius:6px;">
+        <form id="settingForm" class="setting-group" onsubmit="return false;">
+            <label for="themeSelect">主題：</label>
+            <select id="themeSelect">
                 <option value="bright">BRIGHT</option>
                 <option value="dark">DARK</option>
             </select>
-        </div>
+            <label for="roundSelect">關卡題數：</label>
+            <select id="roundSelect">
+                <option value="10">10</option>
+                <option value="12">12</option>
+                <option value="15">15</option>
+            </select>
+            <label for="speedSelect">題目速度：</label>
+            <select id="speedSelect">
+                <option value="0">不限時</option>
+                <option value="3">3秒</option>
+                <option value="5">5秒</option>
+                <option value="8">8秒</option>
+            </select>
+            <label for="levelSelect">難度：</label>
+            <select id="levelSelect">
+                <option value="kinder">幼稚園</option>
+                <option value="ele">國小</option>
+                <option value="junior">國中</option>
+                <option value="high">高中</option>
+                <option value="univ">大學</option>
+            </select>
+        </form>
         <h1>英打小遊戲</h1>
         <div id="status"></div>
         <div id="word"></div>
@@ -194,20 +236,24 @@
         <div class="result" id="result"></div>
     </div>
 <script>
-const WORDS = [
-  'apple','banana','cherry','dog','elephant','frog','grape','house','island','jungle',
-  'king','lemon','monkey','notebook','orange','pencil','queen','rabbit','sun','tree',
-  'umbrella','violin','water','xylophone','yogurt','zebra','car','window','phone','table',
-  'music','cloud','mountain','river','school','family','friend','teacher','beach','movie',
-  'camera','computer','pencilcase','flower','star','moon','circle','square','puzzle','book',
-  'garden','animal','road','forest'
-];
-const ROUND = 10;
+// ---五級詞庫---
+const WORD_BANK = {
+  kinder: ['cat','dog','sun','egg','boy','girl','car','run','bus','box','red','blue','book','pen','mom','dad','toy','bag','cup','ice'],
+  ele: ['apple','banana','clock','green','chair','table','jump','mouse','train','water','tree','sand','star','house','moon','cake','milk','nose','bird','foot','basket','money','cloud','wave'],
+  junior: ['cherry','computer','orange','rabbit','school','family','window','friend','camera','flower','river','mountain','music','puzzle','circle','square','movie','violin','street','zebra','guitar','future','engine','station'],
+  high: ['elephant','notebook','pencilcase','umbrella','xylophone','forest','animal','strong','sentence','pyramid','science','physics','history','classic','exam','design','energy','planet','novel','drama','symbol','equation','biology','concept','meaning'],
+  univ: ['algorithm','philosophy','psychology','quantum','complexity','analyze','hypothesis','simulate','integral','derivative','context','research','theorem','variable','genetics','literature','spectrum','function','operator','economics','society','phenomenon','influence','structure','strategy','synthesis']
+};
+let ROUND = 10;
 let round = 0;
 let totalTime = 0;
 let currentWord = '';
 let startTime = null;
 let gameActive = false;
+let speedSec = 0;
+let timer = null;
+let LEVEL = 'kinder';
+let WORDS = WORD_BANK[LEVEL];
 
 const statusDiv = document.getElementById('status');
 const wordDiv = document.getElementById('word');
@@ -216,7 +262,43 @@ const feedback = document.getElementById('feedback');
 const resultDiv = document.getElementById('result');
 const startBtn = document.getElementById('startBtn');
 const themeSelect = document.getElementById('themeSelect');
+const roundSelect = document.getElementById('roundSelect');
+const speedSelect = document.getElementById('speedSelect');
+const levelSelect = document.getElementById('levelSelect');
 
+roundSelect.onchange = () => { ROUND = parseInt(roundSelect.value); };
+speedSelect.onchange = () => { speedSec = parseInt(speedSelect.value); };
+levelSelect.onchange = () => {
+  LEVEL = levelSelect.value;
+  WORDS = WORD_BANK[LEVEL];
+}
+
+document.getElementById('settingForm').onchange = function() {
+  // 選項改變後自動重新開啟遊戲
+  resetGame();
+};
+function resetGame() {
+  round = 0;
+  totalTime = 0;
+  if(timer) clearTimeout(timer);
+  gameActive = false;
+  resultDiv.innerText = '';
+  startBtn.disabled = false;
+  input.value = '';
+  input.disabled = true;
+  statusDiv.innerText = '';
+  wordDiv.innerText = '';
+  feedback.innerText = '';
+}
+function timeoutInput() {
+  feedback.style.color = '#ff8181';
+  feedback.innerText = '超時沒答，直接進入下一題';
+  setTimeout(() => {
+    feedback.innerText = '';
+    wordDiv.classList.remove('fade-correct');
+    nextRound();
+  }, 700);
+}
 function nextRound() {
     if (round >= ROUND) {
         gameActive = false;
@@ -238,11 +320,15 @@ function nextRound() {
     feedback.innerText = '';
     input.focus();
     startTime = new Date();
+    if(timer) clearTimeout(timer);
+    if(speedSec>0){
+      timer = setTimeout(timeoutInput, speedSec*1000);
+    }
 }
-
 input.addEventListener('keydown', function(e) {
     if (!gameActive) return;
     if (e.key === 'Enter') {
+        if(timer) clearTimeout(timer);
         if (input.value === currentWord) {
             let sec = (new Date() - startTime) / 1000;
             totalTime += sec;
@@ -257,10 +343,10 @@ input.addEventListener('keydown', function(e) {
         } else {
             feedback.style.color = '#c00';
             feedback.innerText = '輸入錯誤，請再試一次！';
+            if(speedSec>0){ timer = setTimeout(timeoutInput, speedSec*1000); }
         }
     }
 });
-
 startBtn.onclick = function() {
     round = 0;
     totalTime = 0;
