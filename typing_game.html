@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>英打小遊戲</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans', 'Roboto', 'Segoe UI', 'Arial', sans-serif;
+            background: linear-gradient(140deg, #fafcfc 0%, #e3e8f9 80%);
+            color: #222;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .card {
+            display: inline-block;
+            background: #fff;
+            padding: 2.5em 3.5em;
+            box-shadow: 0 4px 22px #497de880;
+            border-radius: 16px;
+            margin-top: 60px;
+            min-width: 340px;
+            transition: box-shadow 0.2s;
+        }
+        h1 {
+            letter-spacing: 2px;
+            font-size: 2.1em;
+            font-weight: 700;
+            color: #3568c6;
+        }
+        #status {
+            font-size: 1.2em;
+            color: #624799;
+            margin-top: 8px;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+        #word {
+            font-size: 2.7em;
+            letter-spacing: 4px;
+            color: #3d4258;
+            font-weight: bold;
+            margin: 1.3em 0 0.5em;
+            min-height: 1em;
+            transition: color 0.2s;
+        }
+        input[type="text"] {
+            padding: 0.6em 0.9em;
+            font-size: 1.3em;
+            width: 240px;
+            border: 1.5px solid #b1bad2;
+            border-radius: 7px;
+            outline: none;
+            background: #f8fafd;
+            margin-top: 1em;
+            font-family: inherit;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        input[type="text"]:focus {
+            border-color: #497de8;
+            background: #e7effc;
+        }
+        button {
+            margin-top: 1.4em;
+            padding: 0.65em 2.2em;
+            font-size: 1.07em;
+            background: linear-gradient(95deg, #4265d8 20%, #68b3fb 110%);
+            color: #fff;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 700;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 4px #4265d866;
+            transition: background 0.2s, transform 0.08s;
+        }
+        button:active {
+            transform: scale(0.97);
+        }
+        button:disabled {
+            background: #c1cce8;
+            cursor: not-allowed;
+        }
+        #feedback {
+            min-height: 28px;
+            font-size: 1.1em;
+            margin-top: 0.2em;
+            font-weight: 700;
+        }
+        .result {
+            color: #216a51;
+            font-weight: bold;
+            margin-top: 2em;
+            font-size: 1.25em;
+        }
+        .fade-correct {
+            animation: correctFlash 0.6s;
+        }
+        @keyframes correctFlash {
+            0% { background: #e8ffe5; color: #25b84b; }
+            60% { background: #fff; color: #216a51; }
+            100% { background: none; color: inherit; }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>英打小遊戲</h1>
+        <div id="status"></div>
+        <div id="word"></div>
+        <input type="text" id="input" autocomplete="off" disabled />
+        <div id="feedback"></div>
+        <button id="startBtn">開始遊戲</button>
+        <div class="result" id="result"></div>
+    </div>
+<script>
+const WORDS = [
+  'apple','banana','cherry','dog','elephant','frog','grape','house','island','jungle',
+  'king','lemon','monkey','notebook','orange','pencil','queen','rabbit','sun','tree',
+  'umbrella','violin','water','xylophone','yogurt','zebra','car','window','phone','table',
+  'music','cloud','mountain','river','school','family','friend','teacher','beach','movie',
+  'camera','computer','pencilcase','flower','star','moon','circle','square','puzzle','book',
+  'garden','animal','road','forest'
+];
+const ROUND = 10;
+let round = 0;
+let totalTime = 0;
+let currentWord = '';
+let startTime = null;
+let gameActive = false;
+
+const statusDiv = document.getElementById('status');
+const wordDiv = document.getElementById('word');
+const input = document.getElementById('input');
+const feedback = document.getElementById('feedback');
+const resultDiv = document.getElementById('result');
+const startBtn = document.getElementById('startBtn');
+
+function nextRound() {
+    if (round >= ROUND) {
+        gameActive = false;
+        input.disabled = true;
+        startBtn.disabled = false;
+        let avg = (totalTime / ROUND).toFixed(2);
+        resultDiv.innerText = `遊戲結束！平均每題用時：${avg} 秒`;
+        statusDiv.innerText = '';
+        wordDiv.innerText = '';
+        return;
+    }
+    round++;
+    currentWord = WORDS[Math.floor(Math.random() * WORDS.length)];
+    wordDiv.innerText = currentWord;
+    wordDiv.classList.remove('fade-correct');
+    statusDiv.innerText = `第 ${round} / ${ROUND} 題`;
+    input.value = '';
+    input.disabled = false;
+    feedback.innerText = '';
+    input.focus();
+    startTime = new Date();
+}
+
+input.addEventListener('keydown', function(e) {
+    if (!gameActive) return;
+    if (e.key === 'Enter') {
+        if (input.value === currentWord) {
+            let sec = (new Date() - startTime) / 1000;
+            totalTime += sec;
+            feedback.style.color = '#25b84b';
+            feedback.innerText = `正確！用時：${sec.toFixed(2)} 秒`;
+            wordDiv.classList.add('fade-correct');
+            setTimeout(() => {
+                feedback.innerText = '';
+                wordDiv.classList.remove('fade-correct');
+                nextRound();
+            }, 700);
+        } else {
+            feedback.style.color = '#c00';
+            feedback.innerText = '輸入錯誤，請再試一次！';
+        }
+    }
+});
+
+startBtn.onclick = function() {
+    round = 0;
+    totalTime = 0;
+    gameActive = true;
+    resultDiv.innerText = '';
+    startBtn.disabled = true;
+    nextRound();
+};
+</script>
+</body>
+</html>
